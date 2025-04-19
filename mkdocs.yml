@@ -1,0 +1,8 @@
+site_name: My Docs
+
+plugins:
+  - search
+  - macros:
+      module_name: python/mkdocs-macros-placeholders
+      on_error_fail: true
+      on_undefined: strict
