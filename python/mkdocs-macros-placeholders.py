@@ -92,7 +92,18 @@ def define_env(env):
 
         // Fill from URL if available
         if (urlParams[id]) {
-          input.value = urlParams[id];
+          const value = urlParams[id];
+          // If it's a select and the value is not in the options, add it
+          if (input.tagName === "SELECT" && input.dataset.allowCustom === "true") {
+            const exists = Array.from(input.options).some(opt => opt.value === value);
+            if (!exists) {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = value + " (custom)";
+              input.appendChild(option);
+            }
+          }
+          input.value = value;
           shouldAutoApply = true;
         }
 
@@ -132,7 +143,8 @@ def define_env(env):
             field_html += f'<label for="{input_id}">{label}{" (required)" if required else " (optional)"}:</label>'
 
             if isinstance(default, list):
-                field_html += f'<select id="{input_id}" data-param-id="{input_id}">'
+                # Add a marker to allow JS to patch in missing values if needed
+                field_html += f'<select id="{input_id}" data-param-id="{input_id}" data-allow-custom="true">'
                 for val in default:
                     field_html += f'<option value="{val}">{val}</option>'
                 field_html += '</select>'
