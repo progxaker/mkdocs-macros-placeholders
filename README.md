@@ -9,7 +9,10 @@ This macros allows defining input parameters on a page, and automatically replac
 3. The macro `{{ create_input_block([...]) }}` renders:
    - An input form for required/optional fields.
    - A JavaScript function that walks the entire rendered page and replaces all instances of `%%<placeholder-id>%%`.
-4. Once the "Apply" button is clicked or "Enter" is pressed, all content is updated in place.
+4. When the user clicks "Apply" or presses Enter inside a field:
+   - The entire page is scanned.
+   - All matching placeholders (e.g. `%%database%%`) are replaced live.
+   - Placeholders in other field values (like `%%env%%` inside `%%database%%`) are also resolved.
 
 ### Using GET parameters for defaults
 
@@ -24,14 +27,14 @@ This macros allows defining input parameters on a page, and automatically replac
 # Output Demo
 
 {{ create_input_block([
-  {"id": "database", "label": "Database", "required": True, "default": "my_db"},
-  {"id": "env", "label": "Environment", "required": False, "default": ["dev", "prod", "test"]}
+  {"id": "env", "label": "Environment", "required": True, "default": ["dev", "prod", "test"]},
+  {"id": "database", "label": "Database", "required": False, "default": "%%env%%_db"},
 ]) }}
 
-\`\`\`html
+\```html
 <div style="color: green;">const database = "{{ placeholder("database") }}";</div>
 <div style="color: green;">const env = "{{ placeholder("env") }}";</div>
-\`\`\`
+\```
 ```
 
 ## Run the demo

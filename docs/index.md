@@ -1,8 +1,8 @@
 # Output
 
 {{ create_input_block([
-  {"id": "database", "label": "Database Name", "required": True, "default": "my_db"},
-  {"id": "env", "label": "Environment", "required": False, "default": ["dev", "staging", "prod"]},
+  {"id": "env", "label": "Environment", "required": True, "default": ["dev", "staging", "prod"]},
+  {"id": "database", "label": "Database Name", "required": False, "default": "%%env%%_db"},
   {"id": "logs_enabled", "label": "Enable Logs", "required": False, "default": "yes"}
 ]) }}
 
