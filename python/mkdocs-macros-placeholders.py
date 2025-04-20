@@ -160,7 +160,7 @@ def define_env(env):
                 optional_fields.append(field_html)
 
         html_output = """
-<div>
+<div style="margin: 20px 5px;">
   <style>{css}</style>
 """.format(css=css_content)
 
