@@ -12,7 +12,7 @@ def define_env(env):
     }
     """
 
-    js_template = """
+    js_template = r"""
     function getUrlParams() {
       const params = {};
       const search = window.location.search.substring(1);
