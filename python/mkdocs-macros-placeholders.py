@@ -20,8 +20,15 @@ def define_env(env):
 
       search.split("&").forEach(pair => {
         const [key, val] = pair.split("=");
-        if (key && val !== undefined) {
-          params[decodeURIComponent(key)] = decodeURIComponent(val.replace(/\+/g, " "));
+        if (!key) return;
+
+        try {
+          const decodedKey = decodeURIComponent(key);
+          const decodedVal = decodeURIComponent(val.replace(/\+/g, " "));
+          params[decodedKey] = decodedVal;
+        } catch (e) {
+          console.warn("Could not decode URI component:", val, e);
+          params[key] = val; // fallback to raw
         }
       });
 
@@ -30,12 +37,30 @@ def define_env(env):
 
     function applyInputs(auto = false) {
       const inputs = document.querySelectorAll('[data-param-id]');
-      const values = {};
+      const rawValues = {};
+      const resolvedValues = {};
+
+      // Gather raw input values
       inputs.forEach(input => {
         const id = input.dataset.paramId;
-        values['%%' + id + '%%'] = input.value || '';
+        rawValues['%%' + id + '%%'] = input.value || '';
       });
 
+      // Recursively resolve placeholders inside values
+      const resolve = (value, depth = 0) => {
+        if (depth > 10) return value; // safeguard against circular refs
+        return value.replace(/%%(.*?)%%/g, (match, key) => {
+          const token = '%%' + key + '%%';
+          const resolved = rawValues[token] || '';
+          return resolve(resolved, depth + 1);
+        });
+      };
+
+      for (const [key, val] of Object.entries(rawValues)) {
+        resolvedValues[key] = resolve(val);
+      }
+
+      // Replace placeholders across the entire page (text nodes only)
       const walker = document.createTreeWalker(
         document.body,
         NodeFilter.SHOW_TEXT,
@@ -45,7 +70,7 @@ def define_env(env):
 
       let node;
       while ((node = walker.nextNode())) {
-        for (const [key, val] of Object.entries(values)) {
+        for (const [key, val] of Object.entries(resolvedValues)) {
           if (node.nodeValue.includes(key)) {
             node.nodeValue = node.nodeValue.replaceAll(key, val);
           }
@@ -53,7 +78,7 @@ def define_env(env):
       }
 
       if (auto) {
-        console.log("Auto-applied parameters from URL:", values);
+        console.log("Auto-applied from GET params with resolved values:", resolvedValues);
       }
     }
 
@@ -63,16 +88,17 @@ def define_env(env):
 
       const inputs = document.querySelectorAll('[data-param-id]');
       inputs.forEach(input => {
-        // Fill from URL if present
-        const key = input.dataset.paramId;
-        if (urlParams[key]) {
-          input.value = urlParams[key];
+        const id = input.dataset.paramId;
+
+        // Fill from URL if available
+        if (urlParams[id]) {
+          input.value = urlParams[id];
           shouldAutoApply = true;
         }
 
-        // Apply on Enter
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
+        // Apply on "Enter" key
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
             applyInputs();
           }
         });
